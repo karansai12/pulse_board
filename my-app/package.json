@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "api:dev": "tsx src/graphql/server.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -31,6 +32,7 @@
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3"
   }
 }

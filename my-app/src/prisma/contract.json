@@ -4,12 +4,8 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
-    "post": {
-      "model": "Post",
-      "namespace": "public"
-    },
-    "user": {
-      "model": "User",
+    "visit": {
+      "model": "Visit",
       "namespace": "public"
     }
   },
@@ -17,17 +13,10 @@
     "namespaces": {
       "public": {
         "models": {
-          "Post": {
+          "Visit": {
             "fields": {
-              "authorId": {
+              "category": {
                 "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "content": {
-                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -47,14 +36,7 @@
                   "kind": "scalar"
                 }
               },
-              "published": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
-              "title": {
+              "path": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -62,30 +44,11 @@
                 }
               }
             },
-            "relations": {
-              "author": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "authorId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "User",
-                  "namespace": "public"
-                }
-              }
-            },
+            "relations": {},
             "storage": {
               "fields": {
-                "authorId": {
-                  "column": "authorId"
-                },
-                "content": {
-                  "column": "content"
+                "category": {
+                  "column": "category"
                 },
                 "createdAt": {
                   "column": "createdAt"
@@ -93,82 +56,12 @@
                 "id": {
                   "column": "id"
                 },
-                "published": {
-                  "column": "published"
-                },
-                "title": {
-                  "column": "title"
+                "path": {
+                  "column": "path"
                 }
               },
               "namespaceId": "public",
-              "table": "post"
-            }
-          },
-          "User": {
-            "fields": {
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz-string@1",
-                  "kind": "scalar"
-                }
-              },
-              "email": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "username": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              }
-            },
-            "relations": {
-              "posts": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "authorId"
-                  ]
-                },
-                "to": {
-                  "model": "Post",
-                  "namespace": "public"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "email": {
-                  "column": "email"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "username": {
-                  "column": "username"
-                }
-              },
-              "namespaceId": "public",
-              "table": "user"
+              "table": "visit"
             }
           }
         }
@@ -180,17 +73,12 @@
       "public": {
         "entries": {
           "table": {
-            "post": {
+            "visit": {
               "columns": {
-                "authorId": {
+                "category": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
-                },
-                "content": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
                 },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -206,81 +94,10 @@
                   "nativeType": "text",
                   "nullable": false
                 },
-                "published": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "title": {
+                "path": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "authorId"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "post"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "public",
-                    "tableName": "user"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "authorId"
-                  ],
-                  "name": "post_authorId_idx_e47547ed",
-                  "prefix": "post_authorId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
-            "user": {
-              "columns": {
-                "createdAt": {
-                  "codecId": "pg/timestamptz-string@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "email": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "id": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "username": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
                 }
               },
               "foreignKeys": [],
@@ -290,13 +107,7 @@
                   "id"
                 ]
               },
-              "uniques": [
-                {
-                  "columns": [
-                    "email"
-                  ]
-                }
-              ]
+              "uniques": []
             }
           }
         },
@@ -304,10 +115,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1d6c2c1754f9351653a76c28c15a9701bc5d8b096efca573b52a803e3d771a61"
+    "storageHash": "bcc4d18c9f7a54fc2dbee8653d533fb0e93783772652df22221c282f7d8ff388"
   },
   "execution": {
-    "executionHash": "1ff963fbab83b7266b283d62c8b49c9850cb57c65ea29fe44077380cee559199",
+    "executionHash": "1eaa2486d91ee17beec7be2e4504d616bb81bc33110b2644accfe1ce87c19533",
     "mutations": {
       "defaults": [
         {
@@ -318,18 +129,7 @@
           "ref": {
             "column": "id",
             "namespace": "public",
-            "table": "post"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv4",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
-            "namespace": "public",
-            "table": "user"
+            "table": "visit"
           }
         }
       ]
