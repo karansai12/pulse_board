@@ -1,6 +1,0 @@
-model Visit {
-  id String @id @default(uuid())
-  path String
-  category String
-  createdAt TimestamptzString @default(now())
-}
