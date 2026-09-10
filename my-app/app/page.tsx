@@ -1,90 +1,180 @@
 "use client";
-import TestVisitPage from "@/test-visit/page";
+
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
+import { useAppDispatch, useAppSelector } from "@/lib/store/store";
+import { setSelectedCategory } from "@/lib/store/filterSlice";
 
 const GET_DASHBOARD_DATA = gql`
-  query GetDashBoardData {
-  stats{
-    totalVisits
-    visitsByCategory{
+  query GetDashBoardData($category: String) {
+    stats(category: $category) {
+      totalVisits
+      visitsByCategory {
+        category
+        count
+      }
+    }
+    # FIXED TYPO: changed $categroy to $category
+    visits(category: $category) {
+      id
+      path
       category
-      count
+      createdAt
     }
   }
-  visits{
-    id
-    path
-    category
-    createdAt
-  }
-  }
+`;
 
-`
 interface CategoryCount {
   category: string;
   count: number;
 }
+
 interface VisitStats {
   totalVisits: number;
   visitsByCategory: CategoryCount[];
 }
+
 interface Visit {
   id: string;
   path: string;
   category: string;
   createdAt: string;
 }
+
 interface DashboardQueryData {
   stats: VisitStats;
   visits: Visit[];
 }
 
+interface DashboardQueryVars {
+  category?: string | null;
+}
+
+const CATEGORY_OPTIONS = [
+  {label:"All",value:"all"},
+  {label:"page_view",value:"page_view"},
+  {label:"docs",value:"docs"},
+  {label:"dashboard",value:"dashboard"},
+  {label:"checkout",value:"checkout"},
+]
+
+// MATCH YOUR WORKER'S ACTUAL EVENT CATEGORIES
+const FILTER_CATEGORIES = ["all", "page_view", "docs", "dashboard", "checkout"];
+
 function formatTime(dateString: string) {
   const date = new Date(Number(dateString) || dateString);
-  return isNaN(date.getTime()) ? dateString : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return isNaN(date.getTime())
+    ? dateString
+    : date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
 }
 
 export default function Home() {
-  const { data, loading, error } = useQuery<DashboardQueryData>(GET_DASHBOARD_DATA, {
-    pollInterval: 5000,
-  });
+  const dispatch = useAppDispatch()
+  const selectedCategory  = useAppSelector((state)=>state.filters.selectedCategory)
+
+  const { data, loading, error } = useQuery<DashboardQueryData, DashboardQueryVars>(
+    GET_DASHBOARD_DATA,
+    {
+      variables: {
+        category: selectedCategory === "all" ? undefined : selectedCategory,
+      },
+      pollInterval: 5000,
+      notifyOnNetworkStatusChange: false,
+      fetchPolicy: "cache-and-network",
+    }
+  );
 
   const recentVisits = data?.visits
     ? [...data.visits]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10)
     : [];
+
   return (
-    <div className="p-4 gap-4 flex flex-col">
-      {/* header */}
-      <header className="flex flex-col justify-between sm:flex-row gap-4 border-b border-slate-200">
+    <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+      {/* Header */}
+      <header className="flex flex-col justify-between sm:flex-row gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="taxt-2xl text-bold">Pulse Board</h1>
+          <h1 className="text-2xl font-bold ">Pulse Board</h1>
           <h3 className="text-xs">Live website traffic overview and analytics</h3>
         </div>
-        <div>
-          <span className="text-xs">Auto refreshing (5s)</span>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span className="text-xs font-medium ">Auto refreshing (5s)</span>
         </div>
       </header>
+
       {error && (
         <div className="rounded-lg bg-red-50 p-4 border border-red-200 text-sm text-red-700">
           Failed to fetch analytics: {error.message}
         </div>
       )}
-      {/* tabs */}
+
+      {/* Category Filter Pills */}
+      {/* <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider mr-1">
+          Filter:
+        </span>
+        {FILTER_CATEGORIES.map((cat) => {
+          const isActive = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              }`}
+            >
+              {cat === "all" ? "All Visits" : cat.replace("_", " ")}
+            </button>
+          );
+        })}
+      </div> */}
+      
+      {/* category dropdown */}
+      <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs w-fit">
+        <label
+          htmlFor="category-select"
+          className="text-xs font-semibold text-slate-600 uppercase tracking-wider"
+        >
+          Category:
+        </label>
+        <select
+          id="category-select"
+          value={selectedCategory}
+          onChange={(e) => dispatch(setSelectedCategory(e.target.value))}
+          className="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium cursor-pointer"
+        >
+          {CATEGORY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Total Visits Card */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-            Total Visits
+            {selectedCategory === "all" ? "Total Visits" : `${selectedCategory.replace("_", " ")} Visits`}
           </span>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-4xl font-extrabold tracking-tight text-slate-900">
               {data?.stats?.totalVisits ?? 0}
             </span>
             <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              All time
+              {selectedCategory === "all" ? "All Categories" : "Filtered"}
             </span>
           </div>
         </div>
@@ -108,10 +198,10 @@ export default function Home() {
             </div>
           </div>
         ))}
-
       </div>
-      {/* Recent Visits Table / List (Requirement) */}
-      <div className="bg-white rounded-xl flex flex-row justify-between items-center p-4">
+
+      {/* Unified Table Card */}
+      <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Recent Visits</h2>
@@ -119,56 +209,56 @@ export default function Home() {
               Showing the 10 most recent visitor events
             </p>
           </div>
+          <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md">
+            Top 10
+          </span>
         </div>
-        <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md">
-          Top 10
-        </span>
-      </div>
-      {/* responsive table wrapper */}
-      <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase text-xs tracking-wider">
-                  <th className="py-3.5 px-4 sm:px-6 font-semibold">Path</th>
-                  <th className="py-3.5 px-4 sm:px-6 font-semibold">Category</th>
-                  <th className="py-3.5 px-4 sm:px-6 font-semibold text-right">Time</th>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase text-xs tracking-wider">
+                <th className="py-3.5 px-4 sm:px-6 font-semibold">Path</th>
+                <th className="py-3.5 px-4 sm:px-6 font-semibold">Category</th>
+                <th className="py-3.5 px-4 sm:px-6 font-semibold text-right">Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading && !data && (
+                <tr>
+                  <td colSpan={3} className="py-8 text-center text-slate-400">
+                    Loading recent visits...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading && !data && (
-                  <tr>
-                    <td colSpan={3} className="py-8 text-center text-slate-400">
-                      Loading recent visits...
-                    </td>
-                  </tr>
-                )}
+              )}
 
-                {!loading && recentVisits.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="py-8 text-center text-slate-400">
-                      No visits recorded yet.
-                    </td>
-                  </tr>
-                )}
+              {!loading && recentVisits.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="py-8 text-center text-slate-400">
+                    No visits recorded yet.
+                  </td>
+                </tr>
+              )}
 
-                {recentVisits.map((visit) => (
-                  <tr key={visit.id} className="hover:bg-slate-50/75 transition-colors">
-                    <td className="py-3.5 px-4 sm:px-6 font-mono text-xs sm:text-sm font-medium text-slate-900 break-all">
-                      {visit.path}
-                    </td>
-                    <td className="py-3.5 px-4 sm:px-6">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 capitalize">
-                        {visit.category.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-xs text-slate-500 whitespace-nowrap">
-                      {formatTime(visit.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-    </div >
+              {recentVisits.map((visit) => (
+                <tr key={visit.id} className="hover:bg-slate-50/75 transition-colors">
+                  <td className="py-3.5 px-4 sm:px-6 font-mono text-xs sm:text-sm font-medium text-slate-900 break-all">
+                    {visit.path}
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-6">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 capitalize">
+                      {visit.category.replace("_", " ")}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-xs text-slate-500 whitespace-nowrap">
+                    {formatTime(visit.createdAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   );
 }
