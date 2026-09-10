@@ -4,6 +4,9 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/store";
 import { setSelectedCategory } from "@/lib/store/filterSlice";
+import { useMemo } from "react";
+import { aggregateVisitsByMinute } from "@/lib/chartUtils";
+import VisitsChart from "@/components/visitChart";
 
 const GET_DASHBOARD_DATA = gql`
   query GetDashBoardData($category: String) {
@@ -88,6 +91,10 @@ export default function Home() {
     }
   );
 
+  const chartData = useMemo(()=>{
+    return aggregateVisitsByMinute(data?.visits || [])
+  },[data?.visits])
+
   const recentVisits = data?.visits
     ? [...data.visits]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -139,7 +146,7 @@ export default function Home() {
           );
         })}
       </div> */}
-      
+
       {/* category dropdown */}
       <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs w-fit">
         <label
@@ -199,6 +206,8 @@ export default function Home() {
           </div>
         ))}
       </div>
+      {/* 5. Visits Over Time Chart (New) */}
+      <VisitsChart data={chartData} category={selectedCategory} />
 
       {/* Unified Table Card */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
