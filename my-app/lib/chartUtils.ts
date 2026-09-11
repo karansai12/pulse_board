@@ -1,5 +1,6 @@
 export interface TimeBucketData {
-    time: string; // e.g. "10:14 AM"
+    time: string; 
+    timestamp: number;
     visits: number;
   }
   
@@ -19,8 +20,8 @@ export interface TimeBucketData {
       // Zero out seconds and ms to bucket per minute
       date.setSeconds(0, 0);
       const timeKey = date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: "numeric",
+        hour12: true,
       });
   
       const existing = map.get(timeKey);
@@ -39,6 +40,4 @@ export interface TimeBucketData {
         visits: val.count,
       }))
       .sort((a, b) => a.timestamp - b.timestamp)
-      .slice(-10) // Display the last 10 active minute buckets
-      .map(({ time, visits }) => ({ time, visits }));
   }
