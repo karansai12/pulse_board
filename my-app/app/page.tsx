@@ -5,7 +5,7 @@ import { useQuery } from "@apollo/client/react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/store";
 import { setSelectedCategory } from "@/lib/store/filterSlice";
 import { useMemo } from "react";
-import { aggregateVisitsByMinute } from "@/lib/chartUtils";
+import { aggregateVisitsByHour } from "@/lib/chartUtils";
 import VisitsChart from "@/components/visitChart";
 
 const GET_DASHBOARD_DATA = gql`
@@ -17,7 +17,7 @@ const GET_DASHBOARD_DATA = gql`
         count
       }
     }
-    # FIXED TYPO: changed $categroy to $category
+   changed $categroy to $category
     visits(category: $category) {
       id
       path
@@ -61,9 +61,6 @@ const CATEGORY_OPTIONS = [
   {label:"checkout",value:"checkout"},
 ]
 
-// MATCH YOUR WORKER'S ACTUAL EVENT CATEGORIES
-const FILTER_CATEGORIES = ["all", "page_view", "docs", "dashboard", "checkout"];
-
 function formatTime(dateString: string) {
   const date = new Date(Number(dateString) || dateString);
   return isNaN(date.getTime())
@@ -92,7 +89,7 @@ export default function Home() {
   );
 
   const chartData = useMemo(()=>{
-    return aggregateVisitsByMinute(data?.visits || [])
+    return aggregateVisitsByHour(data?.visits || [])
   },[data?.visits])
 
   const recentVisits = data?.visits
@@ -123,29 +120,6 @@ export default function Home() {
           Failed to fetch analytics: {error.message}
         </div>
       )}
-
-      {/* Category Filter Pills */}
-      {/* <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider mr-1">
-          Filter:
-        </span>
-        {FILTER_CATEGORIES.map((cat) => {
-          const isActive = selectedCategory === cat;
-          return (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-              }`}
-            >
-              {cat === "all" ? "All Visits" : cat.replace("_", " ")}
-            </button>
-          );
-        })}
-      </div> */}
 
       {/* category dropdown */}
       <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs w-fit">

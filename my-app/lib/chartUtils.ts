@@ -4,12 +4,11 @@ export interface TimeBucketData {
     visits: number;
   }
   
-  export function aggregateVisitsByMinute(
+  export function aggregateVisitsByHour(
     visits: Array<{ createdAt: string }>
   ): TimeBucketData[] {
     if (!visits || visits.length === 0) return [];
   
-    // 1. Group count by "HH:MM" (minute-level bucket)
     const map = new Map<string, { timestamp: number; count: number }>();
   
     visits.forEach((visit) => {
@@ -31,8 +30,7 @@ export interface TimeBucketData {
         map.set(timeKey, { timestamp: date.getTime(), count: 1 });
       }
     });
-  
-    // 2. Sort chronologically (oldest to newest for the X-axis)
+ 
     return Array.from(map.entries())
       .map(([time, val]) => ({
         time,
