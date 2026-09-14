@@ -1,6 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 
+
 interface Visit {
   id: string;
   path: string;
@@ -30,6 +31,7 @@ interface VisitStat {
 interface CategoryFilterArgs {
   category: string;
 }
+
 
 const typeDefs = `#graphql
   type Visit {
@@ -85,6 +87,7 @@ const visitsDb: Visit[] = [
 ];
 
 const resolvers = {
+  
   Query: {
     visits: (_: any, { category }: VisitsArgs) => {
       if (!category) {
@@ -134,10 +137,9 @@ const server = new ApolloServer({
   resolvers,
 });
 
-const { url } = await startStandaloneServer(server, {
-  listen: {
-    port: 4000,
-  },
-});
+const port = Number(process.env.PORT) || 4000;
 
+const { url } = await startStandaloneServer(server, {
+  listen: { port },
+});
 console.log(`🚀 Apollo Server running at ${url}`);
