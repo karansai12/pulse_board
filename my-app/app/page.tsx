@@ -17,7 +17,6 @@ const GET_DASHBOARD_DATA = gql`
         count
       }
     }
-   changed $categroy to $category
     visits(category: $category) {
       id
       path
