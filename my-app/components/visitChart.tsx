@@ -30,7 +30,7 @@ export default function VisitsChart({ data, category }: VisitsChartProps) {
           </p>
         </div>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
-          Hourly Trend
+          Minuite Trend
         </span>
       </div>
 
