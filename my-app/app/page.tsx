@@ -52,14 +52,6 @@ interface DashboardQueryVars {
   category?: string | null;
 }
 
-const CATEGORY_OPTIONS = [
-  {label:"All",value:"all"},
-  {label:"page_view",value:"page_view"},
-  {label:"docs",value:"docs"},
-  {label:"dashboard",value:"dashboard"},
-  {label:"checkout",value:"checkout"},
-]
-
 function formatTime(dateString: string) {
   const date = new Date(Number(dateString) || dateString);
   return isNaN(date.getTime())
@@ -86,6 +78,27 @@ export default function Home() {
       fetchPolicy: "cache-and-network",
     }
   );
+
+  const categoryOptions = useMemo(() => {
+    const defaultOption = [{ label: "All", value: "all" }];
+
+    if (!data?.visits || data.visits.length === 0) {
+      return defaultOption;
+    }
+
+    const uniqueCategories = Array.from(
+      new Set(data.visits.map((v) => v.category).filter(Boolean))
+    );
+
+    const dynamicOptions = uniqueCategories.map((category) => ({
+      label: category
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase()),
+      value: category,
+    }));
+
+    return [...defaultOption, ...dynamicOptions];
+  }, [data?.visits]);
 
   const chartData = useMemo(()=>{
     return aggregateVisitsByHour(data?.visits || [])
@@ -132,11 +145,11 @@ export default function Home() {
           id="category-select"
           value={selectedCategory}
           onChange={(e) => dispatch(setSelectedCategory(e.target.value))}
-          className="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium cursor-pointer"
+          className="border border-slate-200 rounded px-3 py-1.5 bg-white text-slate-900"
         >
-          {CATEGORY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {categoryOptions.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-white text-slate-900">
+              {opt.label}
             </option>
           ))}
         </select>
@@ -158,26 +171,6 @@ export default function Home() {
             </span>
           </div>
         </div>
-
-        {/* Category Cards */}
-        {data?.stats?.visitsByCategory?.slice(0, 2).map((item) => (
-          <div
-            key={item.category}
-            className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
-          >
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-wider capitalize">
-              {item.category.replace("_", " ")}
-            </span>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold tracking-tight text-slate-900">
-                {item.count}
-              </span>
-              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                Events
-              </span>
-            </div>
-          </div>
-        ))}
       </div>
       {/* 5. Visits Over Time Chart (New) */}
       <VisitsChart data={chartData} category={selectedCategory} />
