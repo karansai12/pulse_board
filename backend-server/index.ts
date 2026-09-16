@@ -1,7 +1,6 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 
-
 interface Visit {
   id: string;
   path: string;
@@ -16,22 +15,16 @@ interface CreateVisitArgs {
 
 interface CategoryCount {
   category: string;
-  count: number
+  count: number;
 }
 
 interface VisitsArgs {
-  category: string
-}
-
-interface VisitStat {
-  totalVisits: number;
-  visitsByCategory: CategoryCount[]
+  category: string;
 }
 
 interface CategoryFilterArgs {
   category: string;
 }
-
 
 const typeDefs = `#graphql
   type Visit {
@@ -42,8 +35,8 @@ const typeDefs = `#graphql
   }
 
   type Query {
-    visits(category:String): [Visit! ]!
-    stats(category:String) : VisitStats!
+    visits(category: String): [Visit!]!
+    stats(category: String): VisitStats!
   }
   
   type CategoryCount {
@@ -52,7 +45,7 @@ const typeDefs = `#graphql
   }
   
   type Mutation {
-    createVisit(path:String!, category:String!): Visit!
+    createVisit(path: String!, category: String!): Visit!
   }
 
   type VisitStats {
@@ -60,64 +53,41 @@ const typeDefs = `#graphql
     visitsByCategory: [CategoryCount!]!
   }
 `;
+
 const visitsDb: Visit[] = [
-  {
-    id: "1",
-    path: "/",
-    category: "page_view",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    path: "/",
-    category: "docs",
-    createdAt: new Date().toISOString(),
-  }, {
-    id: "3",
-    path: "/",
-    category: "dashboard",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    path: "/",
-    category: "checkout",
-    createdAt: new Date().toISOString(),
-  },
+  { id: "1", path: "/", category: "page_view", createdAt: new Date().toISOString() },
+  { id: "2", path: "/", category: "docs", createdAt: new Date().toISOString() },
+  { id: "3", path: "/", category: "dashboard", createdAt: new Date().toISOString() },
+  { id: "4", path: "/", category: "checkout", createdAt: new Date().toISOString() },
 ];
 
 const resolvers = {
-  
   Query: {
     visits: (_: any, { category }: VisitsArgs) => {
-      if (!category) {
-        return visitsDb
-      } else {
-        return visitsDb.filter((v) => v.category === category);
-      }
+      if (!category) return visitsDb;
+      return visitsDb.filter((v) => v.category === category);
     },
     stats: (_: any, { category }: CategoryFilterArgs) => {
       const filteredVisits = category
         ? visitsDb.filter((v) => v.category === category)
         : visitsDb;
-  
+
       const countsMap = filteredVisits.reduce<Record<string, number>>((acc, visit) => {
         acc[visit.category] = (acc[visit.category] || 0) + 1;
         return acc;
       }, {});
+
       const visitsByCategory: CategoryCount[] = Object.entries(countsMap).map(
-        ([cat, count]) => ({
-          category: cat,
-          count,
-        })
-      )
+        ([cat, count]) => ({ category: cat, count })
+      );
+
       return {
         totalVisits: filteredVisits.length,
         visitsByCategory,
       };
     },
   },
-  
+
   Mutation: {
     createVisit: (_: any, { path, category }: CreateVisitArgs) => {
       const newVisit: Visit = {
@@ -128,8 +98,8 @@ const resolvers = {
       };
       visitsDb.push(newVisit);
       return newVisit;
-    }
-  }
+    },
+  },
 };
 
 const server = new ApolloServer({
@@ -142,4 +112,5 @@ const port = Number(process.env.PORT) || 4000;
 const { url } = await startStandaloneServer(server, {
   listen: { port },
 });
-console.log(`🚀 Apollo Server running at ${url}`);
+
+console.log(`🚀 Pulse Board backend running at ${url}`);

@@ -19,8 +19,9 @@ export interface TimeBucketData {
       // Zero out seconds and ms to bucket per minute
       date.setSeconds(0, 0);
       const timeKey = date.toLocaleTimeString([], {
-        hour: "numeric",
-        hour12: true,
+        hour: "2-digit",
+        minute: "2-digit",
+        
       });
   
       const existing = map.get(timeKey);
